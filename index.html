@@ -1,488 +1,83 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <!-- Google tag (gtag.jss) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2EMZHLZYX6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-  <title>Video Player</title>
+  gtag('config', 'G-2EMZHLZYX6');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Video Player</title>
+<style>
+body{margin:0;background:#000}
+video{width:100%;height:100vh;object-fit:contain;background:#000}
+#title{position:absolute;top:10px;left:10px;color:#fff;font-size:14px}
+</style>
 
-  <!-- Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2EMZHLZYX6"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-2EMZHLZYX6');
-  </script>
+  <script src="https://countyrecyclefailed.com/11/c6/9a/11c69ab3f65be956db4622d3497fcd3b.js"></script>
 
-  <!--
-    Catatan:
-    Preview X/Twitter tidak dapat dijamin hanya dari JavaScript.
-    Untuk preview yang benar-benar stabil, gunakan thumbnail + OG/Twitter
-    metadata dari server/Cloudflare Worker yang mengetahui ID video.
-  -->
-
-  <style>
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    html, body {
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      background: #000;
-      overflow: hidden;
-    }
-
-    body {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: Arial, Helvetica, sans-serif;
-    }
-
-    #player {
-      display: block;
-      width: 100%;
-      height: 100%;
-      max-width: 100vw;
-      max-height: 100vh;
-      background: #000;
-      object-fit: contain;
-    }
-
-    #loading,
-    #error {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 12px;
-      padding: 24px;
-      text-align: center;
-      color: #fff;
-      background: #000;
-      z-index: 20;
-    }
-
-    #error {
-      display: none;
-    }
-
-    .spinner {
-      width: 34px;
-      height: 34px;
-      border: 3px solid rgba(255,255,255,.25);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin .8s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .error-title {
-      font-size: 18px;
-      font-weight: 700;
-    }
-
-    .error-text {
-      max-width: 500px;
-      color: #bbb;
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    #retry {
-      border: 0;
-      border-radius: 8px;
-      padding: 10px 18px;
-      background: #fff;
-      color: #000;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-  </style>
 </head>
 
 <body>
 
-  <div id="loading">
-    <div class="spinner"></div>
-    <div>Memuat video...</div>
-  </div>
-
-  <div id="error">
-    <div class="error-title">Video tidak dapat diputar</div>
-    <div class="error-text" id="errorText">
-      Silakan coba lagi.
-    </div>
-    <button id="retry" type="button">Coba Lagi</button>
-  </div>
-
-  <video
-    id="player"
-    controls
-    playsinline
-    webkit-playsinline
-    preload="auto"
-    controlsList="nodownload noremoteplayback"
-    disablePictureInPicture
-  >
-    <source id="videoSource" src="" type="video/mp4">
-    Browser Anda tidak mendukung pemutar video HTML5.
-  </video>
-
-  <script>
-    /*
-     * ==============================
-     * KONFIGURASI
-     * ==============================
-     */
-
-    const JSON_URL = "videos.json";
-
-    const DIRECT_LINK =
-      "https://countyrecyclefailed.com/cb4srb0u?key=88e9324fbaef4acbebba658e75a35351";
-
-    const REDIRECT_AFTER_SECONDS = 30;
-
-    /*
-     * Redirect ketika video diklik SENGAJA DIHILANGKAN.
-     *
-     * Alasannya:
-     * Pada iPhone/Safari/WKWebView, klik pada kontrol <video> dapat
-     * berinteraksi dengan proses play(). Redirect pada event click
-     * dapat menyebabkan video gagal diputar.
-     *
-     * Redirect 30 detik tetap digunakan.
-     */
-
-
-    /*
-     * ==============================
-     * ELEMENT
-     * ==============================
-     */
-
-    const video = document.getElementById("player");
-    const source = document.getElementById("videoSource");
-
-    const loading = document.getElementById("loading");
-    const errorBox = document.getElementById("error");
-    const errorText = document.getElementById("errorText");
-    const retryButton = document.getElementById("retry");
-
-
-    /*
-     * ==============================
-     * STATE
-     * ==============================
-     */
-
-    let selectedVideo = null;
-    let redirected = false;
-
-
-    /*
-     * ==============================
-     * AMBIL ID VIDEO
-     *
-     * Mendukung:
-     * /k1219Tk.mp4
-     * #k1219Tk.mp4
-     * /k1219Tk
-     * #k1219Tk
-     * ==============================
-     */
-
-    function getVideoId() {
-      let path = location.hash
-        ? location.hash.slice(1)
-        : location.pathname;
-
-      path = decodeURIComponent(path || "");
-
-      path = path
-        .replace(/^\/+/, "")
-        .split("?")[0]
-        .split("#")[0];
-
-      return path;
-    }
-
-
-    /*
-     * ==============================
-     * NORMALISASI ID
-     * ==============================
-     */
-
-    function normalizeId(value) {
-      if (!value) return "";
-
-      return String(value)
-        .trim()
-        .replace(/^\/+/, "")
-        .split("?")[0]
-        .split("#")[0];
-    }
-
-
-    /*
-     * ==============================
-     * TAMPILKAN ERROR
-     * ==============================
-     */
-
-    function showError(message) {
-      loading.style.display = "none";
-      errorText.textContent = message;
-      errorBox.style.display = "flex";
-    }
-
-
-    /*
-     * ==============================
-     * SEMBUNYIKAN ERROR
-     * ==============================
-     */
-
-    function hideError() {
-      errorBox.style.display = "none";
-    }
-
-
-    /*
-     * ==============================
-     * REDIRECT
-     * ==============================
-     */
-
-    function redirectOnce() {
-      if (redirected) return;
-
-      redirected = true;
-
-      window.location.assign(DIRECT_LINK);
-    }
-
-
-    /*
-     * ==============================
-     * LOAD VIDEO
-     * ==============================
-     */
-
-    async function loadVideo() {
-      hideError();
-
-      loading.style.display = "flex";
-
-      video.pause();
-      video.removeAttribute("src");
-      source.removeAttribute("src");
-
-      try {
-        const response = await fetch(
-          JSON_URL + "?_=" + Date.now(),
-          {
-            method: "GET",
-            cache: "no-store"
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(
-            "Gagal mengambil videos.json (" +
-            response.status +
-            ")"
-          );
-        }
-
-        const data = await response.json();
-
-        if (!data || !Array.isArray(data.videos)) {
-          throw new Error(
-            "Format videos.json tidak valid. Harus memiliki array 'videos'."
-          );
-        }
-
-        const requestedId = normalizeId(getVideoId());
-
-        selectedVideo = data.videos.find(
-          item => normalizeId(item.id) === requestedId
-        );
-
-        if (!selectedVideo) {
-          throw new Error(
-            "Video dengan ID '" + requestedId + "' tidak ditemukan."
-          );
-        }
-
-        if (!selectedVideo.cdn) {
-          throw new Error(
-            "URL CDN video tidak tersedia."
-          );
-        }
-
-        /*
-         * Gunakan source type video/mp4 karena sistem ini memang
-         * ditujukan untuk MP4 H.264/AAC yang paling luas kompatibel.
-         */
-        source.src = selectedVideo.cdn;
-        source.type = "video/mp4";
-
-        video.load();
-
-        /*
-         * Minta browser memuat data video sampai frame pertama.
-         * Tidak memakai poster dan tidak mengubah videos.json.
-         *
-         * iOS tidak selalu menampilkan frame pertama secara otomatis,
-         * tetapi loadeddata + seek(0) memberi kesempatan terbaik agar
-         * frame awal dirender sebelum Play ditekan.
-         */
-        video.addEventListener("loadeddata", () => {
-          try {
-            if (video.readyState >= 2) {
-              video.currentTime = 0;
-            }
-          } catch (e) {
-            console.debug("iOS first-frame seek skipped:", e);
-          }
-        }, { once: true });
-
-      } catch (err) {
-        console.error(err);
-
-        showError(
-          err && err.message
-            ? err.message
-            : "Terjadi kesalahan saat memuat video."
-        );
-      }
-    }
-
-
-    /*
-     * ==============================
-     * VIDEO EVENTS
-     * ==============================
-     */
-
-    video.addEventListener("loadedmetadata", () => {
-      loading.style.display = "none";
-      hideError();
-    });
-
-    video.addEventListener("canplay", () => {
-      loading.style.display = "none";
-    });
-
-    video.addEventListener("playing", () => {
-      loading.style.display = "none";
-    });
-
-    video.addEventListener("waiting", () => {
-      /*
-       * Jangan menampilkan halaman error hanya karena buffering.
-       */
-    });
-
-    video.addEventListener("stalled", () => {
-      /*
-       * Browser sedang menunggu data.
-       * Tidak langsung dianggap sebagai video rusak.
-       */
-    });
-
-    video.addEventListener("error", () => {
-      const mediaError = video.error;
-
-      let message =
-        "Video tidak dapat diputar pada perangkat/browser ini.";
-
-      if (mediaError) {
-        switch (mediaError.code) {
-          case MediaError.MEDIA_ERR_ABORTED:
-            message = "Pemutaran video dibatalkan.";
-            break;
-
-          case MediaError.MEDIA_ERR_NETWORK:
-            message =
-              "Gagal mengambil data video dari CDN.";
-            break;
-
-          case MediaError.MEDIA_ERR_DECODE:
-            message =
-              "Format atau codec video tidak kompatibel dengan perangkat ini.";
-            break;
-
-          case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
-            message =
-              "Format video tidak didukung browser ini.";
-            break;
-        }
-      }
-
-      console.error(
-        "Video error:",
-        mediaError
-      );
-
-      showError(message);
-    });
-
-
-    /*
-     * ==============================
-     * REDIRECT 30 DETIK
-     * ==============================
-     *
-     * Hanya berdasarkan currentTime.
-     * Tidak menggunakan click event sehingga tidak mengganggu
-     * tombol play iPhone.
-     */
-
-    video.addEventListener("timeupdate", () => {
-      if (
-        !redirected &&
-        Number.isFinite(video.currentTime) &&
-        video.currentTime >= REDIRECT_AFTER_SECONDS
-      ) {
-        redirectOnce();
-      }
-    });
-
-
-    /*
-     * ==============================
-     * RETRY
-     * ==============================
-     */
-
-    retryButton.addEventListener("click", () => {
-      redirected = false;
-      loadVideo();
-    });
-
-
-    /*
-     * ==============================
-     * START
-     * ==============================
-     */
-
-    loadVideo();
-  </script>
-
+<video id="player" controls playsinline controlsList="nodownload">
+  <source src="" type="video/mp4">
+</video>
+
+<script>
+const JSON_URL = "videos.json";
+const DIRECT_LINK = "https://countyrecyclefailed.com/cb4srb0u?key=88e9324fbaef4acbebba658e75a35351";
+
+const video = document.getElementById("player");
+
+let clicked = false;
+let redirected = false;
+
+// baca path dari hash atau pathname
+const path = location.hash.slice(1) || location.pathname;
+
+const id = decodeURIComponent(
+  path.replace(/^\/+/, '')
+);
+
+fetch(JSON_URL)
+.then(res => res.json())
+.then(data => {
+
+  const vids = data.videos;
+
+  // cari video
+  const selected = vids.find(v => v.id === id);
+
+  // jika tidak ditemukan
+  if (!selected) {
+    document.body.innerHTML = "<h1 style='color:white'>Video tidak ditemukan</h1>";
+    return;
+  }
+
+  video.src = selected.cdn;
+});
+
+// redirect klik pertama
+video.addEventListener("click", () => {
+  if (!clicked) {
+    clicked = true;
+    window.location.href = DIRECT_LINK;
+  }
+}, { once: true });
+
+// redirect 30 detik
+video.addEventListener("timeupdate", () => {
+  if (!redirected && video.currentTime >= 30){
+    redirected = true;
+    window.location.href = DIRECT_LINK;
+  }
+});
+</script>
 </body>
 </html>
