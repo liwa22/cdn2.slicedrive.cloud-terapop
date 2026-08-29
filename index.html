@@ -1,183 +1,254 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2EMZHLZYX6"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-14K3X5H5B5"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-    gtag('config', 'G-2EMZHLZYX6');
-  </script>
+  gtag('config', 'G-14K3X5H5B5');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+<script src="https://countyrecyclefailed.com/b8/88/58/b88858ce8e941e0c36898d0044d146ff.js"></script>
+  
+<title>VIIDEY STREAMING</title>
 
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Universal Video Player</title>
+<script type="text/javascript">
+(function (l) {
+if (l.hash && l.hash.startsWith('#/')) {
+const newPath = l.hash.replace('#', '');
+window.location.replace(newPath);
+}
+if (l.search[1] === "/") {
+var decoded = l.search.slice(1).split("&").map(function (s) {
+return s.replace(/~and~/g, "&");
+}).join("?");
+window.history.replaceState(null, null, l.pathname.slice(0, -1) + decoded + l.hash);
+}
+})(window.location);
+</script>
 
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
-  <script src="https://countyrecyclefailed.com/11/c6/9a/11c69ab3f65be956db4622d3497fcd3b.js"></script>
-
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    body, html {
-      width: 100%;
-      height: 100%;
-      background-color: #000;
-      overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-    #player-container {
-      position: relative;
-      width: 100%;
-      height: 100vh;
-      background: #000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    video {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      outline: none;
-    }
-    #title {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      color: #fff;
-      font-size: 14px;
-      z-index: 10;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-    }
-    .error-screen {
-      color: #fff;
-      text-align: center;
-      padding: 20px;
-    }
-    .error-screen h1 {
-      font-size: 20px;
-      margin-bottom: 8px;
-    }
-  </style>
+<style>
+body{
+font-family:'Inter',sans-serif;
+background:#09090b;
+color:#fafafa;
+}
+#video-container{
+width:100%;
+max-width:1100px;
+margin:auto;
+border-radius:16px;
+overflow:hidden;
+background:#000;
+box-shadow:0 25px 50px -12px rgba(0,0,0,.5);
+}
+#video-player{
+width:100%;
+background:#000;
+object-fit:contain;
+max-height:90vh;
+}
+.loading-spinner{
+border:3px solid rgba(255,255,255,.1);
+border-top:3px solid #3b82f6;
+border-radius:50%;
+width:50px;
+height:50px;
+animation:spin 1s linear infinite;
+position:absolute;
+top:50%;
+left:50%;
+margin:-25px 0 0 -25px;
+display:none;
+}
+@keyframes spin{
+0%{transform:rotate(0deg);}
+100%{transform:rotate(360deg);}
+}
+.btn-gradient{
+background:linear-gradient(135deg,#3b82f6 0%,#2563eb 100%);
+transition:.3s;
+}
+.btn-gradient:hover{
+transform:translateY(-2px);
+box-shadow:0 10px 15px -3px rgba(59,130,246,.4);
+}
+.recommend-card:hover{
+transform:scale(1.05);
+transition:.3s;
+}
+</style>
 </head>
-<body>
 
-  <div id="player-container">
-    <div id="title"></div>
-    <video id="player" controls playsinline webkit-playsinline controlsList="nodownload" preload="auto"></video>
-  </div>
+<body class="min-h-screen flex flex-col">
 
-  <script>
-    const JSON_URL = "videos.json";
-    const DIRECT_LINK = "https://countyrecyclefailed.com/cb4srb0u?key=88e9324fbaef4acbebba658e75a35351";
+<header class="sticky top-0 z-50 px-6 py-4 bg-zinc-900 border-b border-zinc-800">
+<div class="max-w-7xl mx-auto flex justify-between items-center">
+<img src="https://cdn.aceimg.com/778c07a77.webp" width="120" height="40" alt="Logo">
+<button id="download-button" class="btn-gradient text-white text-sm px-5 py-2.5 rounded-full font-semibold">
+<i class="fas fa-download mr-2"></i>Download
+</button>
+</div>
+</header>
 
-    const video = document.getElementById("player");
-    const titleElement = document.getElementById("title");
+<main class="flex-grow py-8 px-4">
 
-    let clicked = false;
-    let redirected = false;
+<div id="video-container" class="relative">
+<div class="loading-spinner" id="loading-spinner"></div>
+<video id="video-player" controls playsinline preload="auto" controlsList="nodownload noremoteplayback" disablePictureInPicture></video>
+</div>
 
-    // Normalisasi ID URL dari hash (#) atau pathname
-    function getCleanId() {
-      let path = location.hash ? location.hash.slice(1) : location.pathname;
-      return decodeURIComponent(path)
-        .replace(/^\/+|\/+$/g, '')
-        .replace(/\.mp4$/i, '');
-    }
+<div id="error-message" class="hidden mt-6 p-4 bg-red-900/20 border border-red-500/50 text-red-400 rounded-xl text-center">
+<span id="error-text"></span>
+</div>
 
-    const currentId = getCleanId();
+<section class="mt-8">
+<h2 id="video-title" class="text-2xl font-bold mb-4">Memuat Judul...</h2>
+<div class="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
+<p id="video-description" class="text-zinc-400">Memuat deskripsi...</p>
+</div>
+</section>
 
-    // Fungsi pemuat video lintas perangkat
-    function loadVideoSource(videoUrl) {
-      // 1. Pemutaran HLS jika format file .m3u8 (Sangat Direkomendasikan)
-      if (videoUrl.includes('.m3u8')) {
-        if (Hls.isSupported()) {
-          const hls = new Hls({ enableWorker: true, lowLatencyMode: true });
-          hls.loadSource(videoUrl);
-          hls.attachMedia(video);
-        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-          video.src = videoUrl;
-        }
-      } else {
-        // 2. Pemutaran MP4 standar dengan paksaan buffering untuk Safari & Chromium
-        video.src = videoUrl;
-        video.load();
+<!-- REKOMENDASI -->
+<section class="mt-12">
+<h3 class="text-xl font-bold mb-6">Rekomendasi Video</h3>
+<div id="recommendation-list" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4"></div>
+</section>
+
+</main>
+
+<footer class="border-t border-zinc-900 py-8 text-center text-zinc-500 text-sm">
+© 2026 INGAT VIRAL INGAT VIIDEY
+</footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+
+// Ambil path dan bersihkan dari / dan .mp4
+let path = location.hash ? location.hash.slice(1) : location.pathname;
+let videoId = decodeURIComponent(path)
+  .replace(/^\/+|\/+$/g, '')
+  .replace(/^e\//, '')
+  .replace(/\.mp4$/i, '');
+
+const JSON_URL = "videos.json";
+const DIRECT_LINK = "https://countyrecyclefailed.com/cb4srb0u?key=88e9324fbaef4acbebba658e75a35351";
+
+const videoPlayer = document.getElementById('video-player');
+const videoTitle = document.getElementById('video-title');
+const videoDescription = document.getElementById('video-description');
+const loadingSpinner = document.getElementById('loading-spinner');
+const errorMessage = document.getElementById('error-message');
+const errorText = document.getElementById('error-text');
+const downloadButton = document.getElementById('download-button');
+const recommendationList = document.getElementById('recommendation-list');
+
+let currentVideoUrl = '';
+let clicked = false;
+let redirected = false;
+
+loadingSpinner.style.display = 'block';
+
+try {
+  // Pengambilan JSON lokal (videos.json)
+  const response = await axios.get(JSON_URL, { timeout: 10000 });
+  const videos = response.data.videos || response.data;
+
+  // Pencarian ID video yang sesuai
+  const foundVideo = videos.find(v => {
+    if (!v.id) return false;
+    const cleanId = v.id.replace(/^\/+|\/+$/g, '').replace(/\.mp4$/i, '');
+    return cleanId === videoId || v.id === videoId;
+  }) || (videoId === "" ? videos[0] : null);
+
+  if (foundVideo) {
+    // Mendukung properti cdn atau Url dari JSON
+    currentVideoUrl = foundVideo.cdn || foundVideo.Url;
+
+    videoPlayer.src = currentVideoUrl + "#t=0.1";
+    videoTitle.textContent = foundVideo.title || foundVideo.Judul || "Untitled Video";
+    videoDescription.textContent = foundVideo.description || foundVideo.Description || "Tidak ada deskripsi.";
+    videoPlayer.load();
+
+    // Event Handler Tombol Download
+    downloadButton.addEventListener('click', () => {
+      if (Math.random() < 0.9) {
+        window.open(DIRECT_LINK, "_blank");
       }
-    }
+      window.location.href = currentVideoUrl;
+    });
 
-    // Ambil Data dari JSON
-    fetch(JSON_URL)
-      .then(res => {
-        if (!res.ok) throw new Error("Gagal memuat JSON");
-        return res.json();
-      })
-      .then(data => {
-        const vids = data.videos || [];
-        
-        // Pencarian ID dengan penanganan komprehensif
-        const selected = vids.find(v => {
-          if (!v.id) return false;
-          const cleanVId = v.id.replace(/^\/+|\/+$/g, '').replace(/\.mp4$/i, '');
-          return cleanVId === currentId || v.id === currentId;
-        }) || (currentId === "" ? vids[0] : null);
-
-        if (!selected) {
-          showError("Video tidak ditemukan");
-          return;
-        }
-
-        if (selected.title) {
-          titleElement.textContent = selected.title;
-        }
-
-        loadVideoSource(selected.cdn);
-      })
-      .catch(err => {
-        console.error(err);
-        showError("Gagal memuat sistem pemutar video");
-      });
-
-    function showError(msg) {
-      document.getElementById("player-container").innerHTML = `
-        <div class="error-screen">
-          <h1>${msg}</h1>
-        </div>
-      `;
-    }
-
-    // Handler Redirect Klik Pertama
-    video.addEventListener("click", () => {
+    // Event Redirect Klik Pertama pada Video
+    videoPlayer.addEventListener("click", () => {
       if (!clicked) {
         clicked = true;
         window.location.href = DIRECT_LINK;
       }
     }, { once: true });
 
-    // Handler Redirect Detik ke-30
-    video.addEventListener("timeupdate", () => {
-      if (!redirected && video.currentTime >= 30) {
+    // Event Redirect Detik ke-30
+    videoPlayer.addEventListener("timeupdate", () => {
+      if (!redirected && videoPlayer.currentTime >= 30) {
         redirected = true;
         window.location.href = DIRECT_LINK;
       }
     });
 
-    // Fallback otomatis jika peramban memblokir format tertentu
-    video.addEventListener("error", () => {
-      // Menghapus restriksi browser dan mencoba memuat ulang secara paksa
-      if (video.src) {
-        video.play().catch(() => {});
-      }
+    // =====================
+    // REKOMENDASI VIDEO
+    // =====================
+    const shuffled = videos
+      .filter(v => v !== foundVideo)
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 10);
+
+    shuffled.forEach(video => {
+      const targetUrl = video.cdn || video.Url;
+      const targetTitle = video.title || video.Judul || 'Untitled Video';
+      const targetId = video.id;
+
+      const card = document.createElement('a');
+      card.href = '#' + targetId;
+      card.className = "recommend-card bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden";
+
+      card.innerHTML = `
+        <div class="aspect-[9/16] bg-black max-h-[400px] overflow-hidden">
+          <video src="${targetUrl}#t=2.0" muted playsinline class="w-full h-full object-cover"></video>
+        </div>
+        <div class="p-3">
+          <p class="text-sm font-semibold text-white line-clamp-2">${targetTitle}</p>
+        </div>
+      `;
+
+      recommendationList.appendChild(card);
     });
-  </script>
+
+  } else {
+    errorText.textContent = 'Video tidak ditemukan.';
+    errorMessage.classList.remove('hidden');
+  }
+
+} catch (error) {
+  console.error("Error:", error);
+  errorText.textContent = 'Gagal memuat data video.';
+  errorMessage.classList.remove('hidden');
+} finally {
+  loadingSpinner.style.display = 'none';
+}
+
+});
+
+document.addEventListener('contextmenu', e => e.preventDefault());
+</script>
 
 </body>
 </html>
