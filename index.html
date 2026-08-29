@@ -132,7 +132,7 @@
     controls
     playsinline
     webkit-playsinline
-    preload="metadata"
+    preload="auto"
     controlsList="nodownload noremoteplayback"
     disablePictureInPicture
   >
@@ -341,6 +341,24 @@
         source.type = "video/mp4";
 
         video.load();
+
+        /*
+         * Minta browser memuat data video sampai frame pertama.
+         * Tidak memakai poster dan tidak mengubah videos.json.
+         *
+         * iOS tidak selalu menampilkan frame pertama secara otomatis,
+         * tetapi loadeddata + seek(0) memberi kesempatan terbaik agar
+         * frame awal dirender sebelum Play ditekan.
+         */
+        video.addEventListener("loadeddata", () => {
+          try {
+            if (video.readyState >= 2) {
+              video.currentTime = 0;
+            }
+          } catch (e) {
+            console.debug("iOS first-frame seek skipped:", e);
+          }
+        }, { once: true });
 
       } catch (err) {
         console.error(err);
