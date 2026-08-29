@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-2EMZHLZYX6"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -10,81 +9,72 @@
 
     gtag('config', 'G-2EMZHLZYX6');
   </script>
-  
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Video Player</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Universal Video Player</title>
 
-  <!-- ========================================== -->
-  <!-- META TAG UNTUK PREVIEW TWITTER (PLAYER CARD) -->
-  <!-- ========================================== -->
-  <meta name="twitter:card" content="player">
-  <meta name="twitter:title" content="Tonton Video">
-  <meta name="twitter:description" content="Klik untuk memutar video.">
-  <!-- Link langsung ke MP4 CDN agar Twitter bisa memutar video di feeder iOS/Android -->
-  <meta name="twitter:player:stream" content="https://test-cdn.videy.co/PE8u6Fsj1.mp4">
-  <meta name="twitter:player:stream:content_type" content="video/mp4">
-  <!-- Link halaman web pemutar video Anda -->
-  <meta name="twitter:player" content="https://domain-anda.com/">
-  <meta name="twitter:player:width" content="1280">
-  <meta name="twitter:player:height" content="720">
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
-  <!-- Open Graph untuk WhatsApp / Facebook / Telegram -->
-  <meta property="og:type" content="video.other">
-  <meta property="og:title" content="Tonton Video">
-  <meta property="og:video" content="https://test-cdn.videy.co/PE8u6Fsj1.mp4">
-  <meta property="og:video:type" content="video/mp4">
-  <meta property="og:video:width" content="1280">
-  <meta property="og:video:height" content="720">
-  <!-- ========================================== -->
+  <script src="https://countyrecyclefailed.com/11/c6/9a/11c69ab3f65be956db4622d3497fcd3b.js"></script>
 
   <style>
     * {
       box-sizing: border-box;
-    }
-    body {
       margin: 0;
       padding: 0;
-      background: #000;
-      width: 100vw;
-      height: 100vh;
+    }
+    body, html {
+      width: 100%;
+      height: 100%;
+      background-color: #000;
       overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    #player-container {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      background: #000;
       display: flex;
       justify-content: center;
       align-items: center;
     }
     video {
       width: 100%;
-      height: 100vh;
+      height: 100%;
       object-fit: contain;
-      background: #000;
+      outline: none;
     }
     #title {
       position: absolute;
-      top: 10px;
-      left: 10px;
+      top: 12px;
+      left: 12px;
       color: #fff;
       font-size: 14px;
       z-index: 10;
-      font-family: sans-serif;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
     }
-    .error-msg {
+    .error-screen {
       color: #fff;
-      font-family: sans-serif;
       text-align: center;
       padding: 20px;
     }
+    .error-screen h1 {
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
   </style>
-
-  <!-- Script Ad Network -->
-  <script src="https://countyrecyclefailed.com/11/c6/9a/11c69ab3f65be956db4622d3497fcd3b.js"></script>
 </head>
-
 <body>
 
-  <div id="title"></div>
-  
-  <video id="player" controls playsinline controlsList="nodownload" preload="metadata"></video>
+  <div id="player-container">
+    <div id="title"></div>
+    <video id="player" controls playsinline webkit-playsinline controlsList="nodownload" preload="auto"></video>
+  </div>
 
   <script>
     const JSON_URL = "videos.json";
@@ -96,17 +86,49 @@
     let clicked = false;
     let redirected = false;
 
-    const path = location.hash.slice(1) || location.pathname;
-    const id = decodeURIComponent(path.replace(/^\/+/, ''));
+    // Normalisasi ID URL dari hash (#) atau pathname
+    function getCleanId() {
+      let path = location.hash ? location.hash.slice(1) : location.pathname;
+      return decodeURIComponent(path)
+        .replace(/^\/+|\/+$/g, '')
+        .replace(/\.mp4$/i, '');
+    }
 
+    const currentId = getCleanId();
+
+    // Fungsi pemuat video lintas perangkat
+    function loadVideoSource(videoUrl) {
+      // 1. Pemutaran HLS jika format file .m3u8 (Sangat Direkomendasikan)
+      if (videoUrl.includes('.m3u8')) {
+        if (Hls.isSupported()) {
+          const hls = new Hls({ enableWorker: true, lowLatencyMode: true });
+          hls.loadSource(videoUrl);
+          hls.attachMedia(video);
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = videoUrl;
+        }
+      } else {
+        // 2. Pemutaran MP4 standar dengan paksaan buffering untuk Safari & Chromium
+        video.src = videoUrl;
+        video.load();
+      }
+    }
+
+    // Ambil Data dari JSON
     fetch(JSON_URL)
       .then(res => {
-        if (!res.ok) throw new Error("Gagal mengambil file JSON");
+        if (!res.ok) throw new Error("Gagal memuat JSON");
         return res.json();
       })
       .then(data => {
         const vids = data.videos || [];
-        const selected = vids.find(v => v.id === id) || (id === "" ? vids[0] : null);
+        
+        // Pencarian ID dengan penanganan komprehensif
+        const selected = vids.find(v => {
+          if (!v.id) return false;
+          const cleanVId = v.id.replace(/^\/+|\/+$/g, '').replace(/\.mp4$/i, '');
+          return cleanVId === currentId || v.id === currentId;
+        }) || (currentId === "" ? vids[0] : null);
 
         if (!selected) {
           showError("Video tidak ditemukan");
@@ -117,18 +139,22 @@
           titleElement.textContent = selected.title;
         }
 
-        video.src = selected.cdn;
-        video.load();
+        loadVideoSource(selected.cdn);
       })
       .catch(err => {
-        console.error("Error:", err);
-        showError("Terjadi kesalahan saat memuat media");
+        console.error(err);
+        showError("Gagal memuat sistem pemutar video");
       });
 
-    function showError(message) {
-      document.body.innerHTML = `<h1 class="error-msg">${message}</h1>`;
+    function showError(msg) {
+      document.getElementById("player-container").innerHTML = `
+        <div class="error-screen">
+          <h1>${msg}</h1>
+        </div>
+      `;
     }
 
+    // Handler Redirect Klik Pertama
     video.addEventListener("click", () => {
       if (!clicked) {
         clicked = true;
@@ -136,6 +162,7 @@
       }
     }, { once: true });
 
+    // Handler Redirect Detik ke-30
     video.addEventListener("timeupdate", () => {
       if (!redirected && video.currentTime >= 30) {
         redirected = true;
@@ -143,8 +170,12 @@
       }
     });
 
+    // Fallback otomatis jika peramban memblokir format tertentu
     video.addEventListener("error", () => {
-      showError("Format video tidak didukung pada perangkat ini");
+      // Menghapus restriksi browser dan mencoba memuat ulang secara paksa
+      if (video.src) {
+        video.play().catch(() => {});
+      }
     });
   </script>
 
