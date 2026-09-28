@@ -1,211 +1,254 @@
-<!DOCTYPE html><html lang="id">
-<head><!-- Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=G-2EMZHLZYX6"></script><script>
-window.dataLayer = window.dataLayer || [];
+```html
+<!DOCTYPE html>
+<html lang="id">
 
-function gtag(){
-    dataLayer.push(arguments);
-}
+<head>
 
-gtag('js', new Date());
-gtag('config', 'G-2EMZHLZYX6');
-</script><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Video Player</title><style>
-body{
-    margin:0;
-    background:#000;
-}
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2EMZHLZYX6"></script>
 
-video{
-    width:100%;
-    height:100vh;
-    object-fit:contain;
-    background:#000;
-}
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-#title{
-    position:absolute;
-    top:10px;
-    left:10px;
-    color:#fff;
-    font-size:14px;
-}
-</style><!-- =========================
-     POPUNDER
-========================= --><script src="https://countyrecyclefailed.com/11/c6/9a/11c69ab3f65be956db4622d3497fcd3b.js"></script></head><body><video
-id="player"
-controls
-playsinline
-controlsList="nodownload"
+        function gtag() {
+            dataLayer.push(arguments);
+        }
 
-«»
+        gtag('js', new Date());
+        gtag('config', 'G-2EMZHLZYX6');
+    </script>
 
-<source src="" type="video/mp4">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-</video><script>
+    <title>Video Player</title>
 
-/* =========================
-   KONFIGURASI
-========================= */
+    <style>
+        body {
+            margin: 0;
+            background: #000;
+        }
 
-const JSON_URL = "videos.json";
+        video {
+            width: 100%;
+            height: 100vh;
+            object-fit: contain;
+            background: #000;
+        }
 
-/* DIRECTLINK LAMA */
-const DIRECT_LINK =
-"https://countyrecyclefailed.com/cb4srb0u?key=88e9324fbaef4acbebba658e75a35351";
+        #title {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #fff;
+            font-size: 14px;
+        }
+    </style>
 
-/* SHOPEE AFFILIATE */
-const SHOPEE_LINK =
-"https://s.shopee.co.id/7AdYOQp5wO";
+</head>
 
+<body>
 
-const video = document.getElementById("player");
+    <video
+        id="player"
+        controls
+        playsinline
+        controlsList="nodownload"
+    >
+        <source src="" type="video/mp4">
+    </video>
 
-let clicked = false;
-let redirected = false;
 
+    <script>
 
-/* =========================
-   PILIH IKLAN RANDOM
-========================= */
+        /* =========================
+           KONFIGURASI
+        ========================= */
 
-function getRandomAd(){
+        const JSON_URL = "videos.json";
 
-    const ads = [
-        DIRECT_LINK,
-        SHOPEE_LINK
-    ];
 
-    const randomIndex =
-        Math.floor(Math.random() * ads.length);
+        /* =========================
+           SHOPEE AFFILIATE
+           
+           Tambahkan link sebanyak
+           yang kamu inginkan.
+        ========================= */
 
-    return ads[randomIndex];
-}
+        const SHOPEE_LINKS = [
 
+            "https://s.shopee.co.id/7AdYOQp5wO",
 
-/* =========================
-   REDIRECT RANDOM
-========================= */
+            "https://s.shopee.co.id/5LCG5dmTTw",
 
-function redirectRandom(){
+            "https://s.shopee.co.id/1AjjtnZ0L"
 
-    if(redirected) return;
+        ];
 
-    redirected = true;
 
-    const selectedAd = getRandomAd();
+        const video = document.getElementById("player");
 
-    window.location.href = selectedAd;
-}
 
+        let clicked = false;
+        let redirected = false;
 
-/* =========================
-   AMBIL ID VIDEO
-========================= */
 
-const path =
-    location.hash.slice(1) ||
-    location.pathname;
+        /* =========================
+           PILIH SHOPEE RANDOM
+        ========================= */
 
-const id = decodeURIComponent(
-    path.replace(/^\/+/, '')
-);
+        function getRandomShopeeLink() {
 
+            const randomIndex =
+                Math.floor(
+                    Math.random() * SHOPEE_LINKS.length
+                );
 
-/* =========================
-   LOAD VIDEOS.JSON
-========================= */
+            return SHOPEE_LINKS[randomIndex];
 
-fetch(JSON_URL)
+        }
 
-.then(res => {
 
-    if(!res.ok){
-        throw new Error("Gagal mengambil videos.json");
-    }
+        /* =========================
+           REDIRECT KE SHOPEE
+        ========================= */
 
-    return res.json();
+        function redirectRandom() {
 
-})
+            if (redirected) return;
 
-.then(data => {
+            redirected = true;
 
-    const vids = data.videos;
+            const selectedLink =
+                getRandomShopeeLink();
 
-    const selected =
-        vids.find(v => v.id === id);
+            window.location.href = selectedLink;
 
-    if(!selected){
+        }
 
-        document.body.innerHTML =
-        '<h1 style="color:white;text-align:center;margin-top:40px;">Video tidak ditemukan</h1>';
 
-        return;
-    }
+        /* =========================
+           AMBIL ID VIDEO
+        ========================= */
 
-    video.src = selected.cdn;
+        const path =
+            location.hash.slice(1) ||
+            location.pathname;
 
-})
+        const id =
+            decodeURIComponent(
+                path.replace(/^\/+/, '')
+            );
 
-.catch(error => {
 
-    console.error(error);
+        /* =========================
+           LOAD VIDEOS.JSON
+        ========================= */
 
-    document.body.innerHTML =
-    '<h1 style="color:white;text-align:center;margin-top:40px;">Gagal memuat video</h1>';
+        fetch(JSON_URL)
 
-});
+        .then(res => {
 
+            if (!res.ok) {
+                throw new Error(
+                    "Gagal mengambil videos.json"
+                );
+            }
 
-/* =========================
-   KLIK VIDEO
-========================= */
+            return res.json();
 
-video.addEventListener("click", function(){
+        })
 
-    /*
-     KLIK PERTAMA
-     ----------------
-     Popunder tetap bekerja
-     melalui script iklan di <head>.
-    */
+        .then(data => {
 
-    if(!clicked){
+            const vids = data.videos;
 
-        clicked = true;
+            const selected =
+                vids.find(v => v.id === id);
 
-        return;
-    }
 
+            if (!selected) {
 
-    /*
-     KLIK KEDUA DAN SETERUSNYA
-     ----------------
-     Random:
-     - DirectLink
-     - Shopee Affiliate
-    */
+                document.body.innerHTML =
+                    '<h1 style="color:white;text-align:center;margin-top:40px;">Video tidak ditemukan</h1>';
 
-    redirectRandom();
+                return;
+            }
 
-});
 
+            video.src = selected.cdn;
 
-/* =========================
-   REDIRECT SETELAH 30 DETIK
-========================= */
+        })
 
-video.addEventListener("timeupdate", function(){
+        .catch(error => {
 
-    if(
-        !redirected &&
-        video.currentTime >= 30
-    ){
+            console.error(error);
 
-        redirectRandom();
+            document.body.innerHTML =
+                '<h1 style="color:white;text-align:center;margin-top:40px;">Gagal memuat video</h1>';
 
-    }
+        });
 
-});
 
-</script></body>
+        /* =========================
+           KLIK VIDEO
+        ========================= */
+
+        video.addEventListener(
+            "click",
+            function () {
+
+                /*
+                 KLIK PERTAMA
+                 ----------------
+                 Tidak redirect.
+                */
+
+                if (!clicked) {
+
+                    clicked = true;
+
+                    return;
+                }
+
+
+                /*
+                 KLIK KEDUA DAN SETERUSNYA
+                 ----------------
+                 Redirect random
+                 ke salah satu Shopee.
+                */
+
+                redirectRandom();
+
+            }
+        );
+
+
+        /* =========================
+           REDIRECT SETELAH 30 DETIK
+        ========================= */
+
+        video.addEventListener(
+            "timeupdate",
+            function () {
+
+                if (
+                    !redirected &&
+                    video.currentTime >= 30
+                ) {
+
+                    redirectRandom();
+
+                }
+
+            }
+        );
+
+
+    </script>
+
+</body>
+
 </html>
+```
