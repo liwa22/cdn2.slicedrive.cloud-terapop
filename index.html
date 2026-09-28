@@ -1035,16 +1035,56 @@
 
                 /*
                  * Tampilkan toast awal
-                 * jika ID video ini
-                 * belum pernah mendapatkan
-                 * iklan awal.
+                 * setelah video sudah
+                 * berhasil memuat data.
+                 *
+                 * Urutan:
+                 * videos.json berhasil dimuat
+                 *        ↓
+                 * video.src dipasang
+                 *        ↓
+                 * loadeddata
+                 *        ↓
+                 * tunggu 2 detik
+                 *        ↓
+                 * toast muncul
+                 *
+                 * loadeddata dipakai agar
+                 * toast tidak muncul sebelum
+                 * data video siap ditampilkan.
                  */
 
                 if (
                     !hasSeenInitialAd()
                 ) {
 
-                    showInitialAd();
+                    video.addEventListener(
+                        "loadeddata",
+                        function showToastAfterLoad() {
+
+                            setTimeout(
+                                function () {
+
+                                    showInitialAd();
+
+                                },
+                                2000
+                            );
+
+
+                            /*
+                             * Event cukup dijalankan
+                             * satu kali untuk pemuatan
+                             * video awal.
+                             */
+
+                            video.removeEventListener(
+                                "loadeddata",
+                                showToastAfterLoad
+                            );
+
+                        }
+                    );
 
                 }
 
