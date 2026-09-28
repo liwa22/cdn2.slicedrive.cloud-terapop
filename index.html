@@ -18,10 +18,12 @@
     </script>
 
     <meta charset="UTF-8">
+
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
     <title>Video Player</title>
+
 
     <style>
 
@@ -29,22 +31,33 @@
             box-sizing: border-box;
         }
 
+
         body {
+
             margin: 0;
+
             background: #000;
+
             overflow: hidden;
+
         }
 
+
         video {
+
             width: 100%;
+
             height: 100vh;
+
             object-fit: contain;
+
             background: #000;
+
         }
 
 
         /* =========================
-           OVERLAY IKLAN
+           TOAST / POPUP IKLAN
         ========================= */
 
         #adOverlay {
@@ -66,10 +79,6 @@
         }
 
 
-        /* =========================
-           BOX IKLAN
-        ========================= */
-
         #adBox {
 
             width: calc(100% - 40px);
@@ -80,11 +89,9 @@
 
             border-radius: 18px;
 
-            padding: 34px 25px 35px;
+            padding: 35px 25px;
 
             text-align: center;
-
-            position: relative;
 
             box-shadow:
                 0 10px 40px rgba(0,0,0,.4);
@@ -92,40 +99,9 @@
         }
 
 
-        /* =========================
-           TOMBOL CLOSE
-        ========================= */
-
-        #closeAd {
-
-            position: absolute;
-
-            top: 13px;
-
-            right: 17px;
-
-            border: none;
-
-            background: transparent;
-
-            font-size: 34px;
-
-            line-height: 1;
-
-            cursor: pointer;
-
-            color: #111;
-
-        }
-
-
-        /* =========================
-           JUDUL
-        ========================= */
-
         #adBox h2 {
 
-            margin: 30px 0 25px;
+            margin: 0 0 25px;
 
             font-size: 30px;
 
@@ -134,15 +110,9 @@
         }
 
 
-        /* =========================
-           DESKRIPSI
-        ========================= */
-
         #adBox p {
 
-            margin: 0 auto 28px;
-
-            max-width: 420px;
+            margin: 0;
 
             font-size: 21px;
 
@@ -153,9 +123,12 @@
         }
 
 
-        /* =========================
-           BUTTON DOWNLOAD
-        ========================= */
+        /*
+         * Tombol visual saja.
+         *
+         * Klik sebenarnya ditangani
+         * oleh seluruh overlay.
+         */
 
         #downloadButton {
 
@@ -165,7 +138,7 @@
 
             max-width: 375px;
 
-            margin: auto;
+            margin: 28px auto 0;
 
             padding: 18px 20px;
 
@@ -182,15 +155,6 @@
             font-weight: bold;
 
             cursor: pointer;
-
-            text-decoration: none;
-
-        }
-
-
-        #downloadButton:active {
-
-            transform: scale(.98);
 
         }
 
@@ -212,22 +176,23 @@
         playsinline
         controlsList="nodownload"
     >
-        <source src="" type="video/mp4">
+
+        <source
+            src=""
+            type="video/mp4"
+        >
+
     </video>
 
 
 
     <!-- =========================
-         POPUP IKLAN
+         TOAST IKLAN
     ========================= -->
 
     <div id="adOverlay">
 
         <div id="adBox">
-
-            <button id="closeAd">
-                ×
-            </button>
 
             <h2>
                 Download Video
@@ -250,16 +215,16 @@
     <script>
 
 
-        /* =========================
+        /* =====================================================
            KONFIGURASI
-        ========================= */
+        ===================================================== */
 
         const JSON_URL = "videos.json";
 
 
-        /* =========================
+        /* =====================================================
            SHOPEE AFFILIATE
-        ========================= */
+        ===================================================== */
 
         const SHOPEE_LINKS = [
 
@@ -272,33 +237,38 @@
         ];
 
 
-        /* =========================
+        /* =====================================================
            ELEMENT
-        ========================= */
+        ===================================================== */
 
         const video =
             document.getElementById("player");
 
+
         const adOverlay =
             document.getElementById("adOverlay");
 
-        const closeAd =
-            document.getElementById("closeAd");
 
         const downloadButton =
             document.getElementById("downloadButton");
 
 
-        /* =========================
-           STATUS IKLAN
-        ========================= */
+        /* =====================================================
+           STATUS
+        ===================================================== */
 
-        let adShown = false;
+        let initialAdShown = false;
+
+        let redirecting = false;
+
+        let currentVideoId = "";
+
+        let adTimer = null;
 
 
-        /* =========================
+        /* =====================================================
            RANDOM SHOPEE
-        ========================= */
+        ===================================================== */
 
         function getRandomShopeeLink() {
 
@@ -324,54 +294,91 @@
         }
 
 
+        /* =====================================================
+           KEY IKLAN PER VIDEO
+           
+           Contoh:
 
-        /* =========================
-           CEK APAKAH IKLAN
-           SUDAH PERNAH DITAMPILKAN
-        ========================= */
+           video_ad_seen_video1.mp4
+           video_ad_seen_video2.mp4
+           video_ad_seen_video3.mp4
+        ===================================================== */
 
-        function hasSeenAd() {
+        function getAdStorageKey(videoId) {
 
-            return sessionStorage.getItem(
-                "video_ad_seen"
-            ) === "1";
-
-        }
-
-
-
-        /* =========================
-           TANDAI IKLAN SUDAH DILIHAT
-        ========================= */
-
-        function markAdAsSeen() {
-
-            sessionStorage.setItem(
-                "video_ad_seen",
-                "1"
+            return (
+                "video_ad_seen_" +
+                videoId
             );
 
         }
 
 
+        /* =====================================================
+           CEK APAKAH IKLAN AWAL SUDAH DIKLIK
+        ===================================================== */
 
-        /* =========================
-           TAMPILKAN POPUP
-        ========================= */
+        function hasSeenInitialAd(videoId) {
 
-        function showAd() {
+            if (!videoId) {
+                return false;
+            }
 
-            if (adShown) {
+
+            return sessionStorage.getItem(
+                getAdStorageKey(videoId)
+            ) === "1";
+
+        }
+
+
+        /* =====================================================
+           TANDAI IKLAN AWAL SUDAH SELESAI
+        ===================================================== */
+
+        function markInitialAdSeen() {
+
+            if (!currentVideoId) {
                 return;
             }
 
 
-            if (hasSeenAd()) {
+            sessionStorage.setItem(
+
+                getAdStorageKey(
+                    currentVideoId
+                ),
+
+                "1"
+
+            );
+
+        }
+
+
+        /* =====================================================
+           TAMPILKAN TOAST AWAL
+        ===================================================== */
+
+        function showInitialAd() {
+
+            if (initialAdShown) {
                 return;
             }
 
 
-            adShown = true;
+            if (
+                hasSeenInitialAd(
+                    currentVideoId
+                )
+            ) {
+
+                return;
+
+            }
+
+
+            initialAdShown = true;
 
 
             adOverlay.style.display =
@@ -380,12 +387,11 @@
         }
 
 
+        /* =====================================================
+           SEMBUNYIKAN TOAST
+        ===================================================== */
 
-        /* =========================
-           TUTUP POPUP
-        ========================= */
-
-        function hideAd() {
+        function hideInitialAd() {
 
             adOverlay.style.display =
                 "none";
@@ -393,209 +399,395 @@
         }
 
 
+        /* =====================================================
+           REDIRECT AFFILIATE
+        ===================================================== */
 
-        /* =========================
-           KLIK DOWNLOAD
-        ========================= */
+        function redirectAffiliate() {
 
-        downloadButton.addEventListener(
-            "click",
-            function () {
-
-                const selectedLink =
-                    getRandomShopeeLink();
-
-
-                if (!selectedLink) {
-                    hideAd();
-                    return;
-                }
-
-
-                /*
-                 * Tandai SEBELUM redirect.
-                 *
-                 * Jadi ketika user kembali
-                 * dari Shopee, popup tidak
-                 * muncul lagi.
-                 */
-
-                markAdAsSeen();
-
-
-                hideAd();
-
-
-                /*
-                 * Redirect ke Shopee
-                 */
-
-                window.location.href =
-                    selectedLink;
-
+            if (redirecting) {
+                return;
             }
-        );
 
 
+            const selectedLink =
+                getRandomShopeeLink();
 
-        /* =========================
-           CLOSE POPUP
-        ========================= */
 
-        closeAd.addEventListener(
+            if (!selectedLink) {
+                return;
+            }
+
+
+            redirecting = true;
+
+
+            window.location.href =
+                selectedLink;
+
+        }
+
+
+        /* =====================================================
+           KLIK SAAT TOAST TAMPIL
+           
+           APAPUN YANG DIKLIK:
+           
+           - kotak putih
+           - tulisan
+           - tombol
+           - area hitam
+           - video
+           - kontrol
+           
+           semuanya redirect affiliate.
+        ===================================================== */
+
+        document.addEventListener(
+
             "click",
+
             function (event) {
 
-                event.stopPropagation();
+                /*
+                 * Kalau toast sedang tampil,
+                 * klik DI MANA SAJA = affiliate.
+                 */
 
-                markAdAsSeen();
+                if (
+                    adOverlay.style.display ===
+                    "flex"
+                ) {
 
-                hideAd();
+                    /*
+                     * Tandai khusus video ini
+                     * sebelum redirect.
+                     */
 
-            }
-        );
+                    markInitialAdSeen();
 
 
+                    /*
+                     * Sembunyikan toast.
+                     */
 
-        /* =========================
-           KLIK PERTAMA DI HALAMAN
-           
-           Bukan langsung redirect.
-           
-           Hanya menampilkan popup.
-        ========================= */
+                    hideInitialAd();
 
-        document.addEventListener(
-            "click",
-            function () {
 
-                if (!hasSeenAd()) {
+                    /*
+                     * Redirect Shopee.
+                     */
 
-                    showAd();
+                    redirectAffiliate();
+
+                    return;
 
                 }
 
             },
-            {
-                capture: true
-            }
+
+            true
+
         );
 
 
-
-        /* =========================
-           TOUCH / TAP
+        /* =====================================================
+           SUPPORT TOUCH HP
            
-           Untuk HP Android/iPhone.
-        ========================= */
+           Pada HP, touch bisa terjadi sebelum click.
+        ===================================================== */
 
         document.addEventListener(
+
             "touchstart",
+
             function () {
 
-                if (!hasSeenAd()) {
+                if (
+                    adOverlay.style.display ===
+                    "flex"
+                ) {
 
-                    showAd();
+                    markInitialAdSeen();
+
+                    hideInitialAd();
+
+                    redirectAffiliate();
 
                 }
 
             },
+
             {
                 capture: true,
                 passive: true
             }
+
         );
 
 
+        /* =====================================================
+           IKLAN 40 DETIK
+           
+           Setelah video berjalan 40 detik,
+           redirect affiliate.
 
-        /* =========================
+           Setelah user kembali dari Shopee,
+           timer dimulai lagi dari awal.
+        ===================================================== */
+
+        function start40SecondAdTimer() {
+
+            clearTimeout(adTimer);
+
+
+            adTimer = setTimeout(
+
+                function () {
+
+                    redirectAffiliate();
+
+                },
+
+                40000
+
+            );
+
+        }
+
+
+        /* =====================================================
+           RESET TIMER
+        ===================================================== */
+
+        function reset40SecondAdTimer() {
+
+            clearTimeout(adTimer);
+
+            start40SecondAdTimer();
+
+        }
+
+
+        /* =====================================================
+           VIDEO MULAI
+        ===================================================== */
+
+        video.addEventListener(
+
+            "play",
+
+            function () {
+
+                /*
+                 * Timer 40 detik mulai
+                 * ketika video dimainkan.
+                 */
+
+                start40SecondAdTimer();
+
+            }
+
+        );
+
+
+        /* =====================================================
+           VIDEO PAUSE
+        ===================================================== */
+
+        video.addEventListener(
+
+            "pause",
+
+            function () {
+
+                clearTimeout(adTimer);
+
+            }
+
+        );
+
+
+        /* =====================================================
+           VIDEO SELESAI
+        ===================================================== */
+
+        video.addEventListener(
+
+            "ended",
+
+            function () {
+
+                clearTimeout(adTimer);
+
+            }
+
+        );
+
+
+        /* =====================================================
            AMBIL ID VIDEO
-        ========================= */
+        ===================================================== */
 
         const path =
             location.hash.slice(1) ||
             location.pathname;
 
 
-        const id =
+        currentVideoId =
             decodeURIComponent(
                 path.replace(/^\/+/, '')
             );
 
 
-
-        /* =========================
+        /* =====================================================
            LOAD VIDEOS.JSON
-        ========================= */
+        ===================================================== */
 
         fetch(JSON_URL)
 
-        .then(res => {
+        .then(
 
-            if (!res.ok) {
+            res => {
 
-                throw new Error(
-                    "Gagal mengambil videos.json"
-                );
+                if (!res.ok) {
+
+                    throw new Error(
+                        "Gagal mengambil videos.json"
+                    );
+
+                }
+
+
+                return res.json();
 
             }
 
-            return res.json();
+        )
 
-        })
+        .then(
 
-        .then(data => {
+            data => {
 
-            const vids =
-                data.videos;
-
-
-            const selected =
-                vids.find(
-                    v => v.id === id
-                );
+                const vids =
+                    data.videos;
 
 
-            if (!selected) {
+                const selected =
+                    vids.find(
+
+                        v =>
+                            v.id ===
+                            currentVideoId
+
+                    );
+
+
+                if (!selected) {
+
+                    document.body.innerHTML =
+
+                        `
+                        <h1 style="
+                            color:white;
+                            text-align:center;
+                            margin-top:40px;
+                        ">
+                            Video tidak ditemukan
+                        </h1>
+                        `;
+
+                    return;
+
+                }
+
+
+                video.src =
+                    selected.cdn;
+
+
+                /*
+                 * Setelah video siap,
+                 * cek apakah video ID ini
+                 * sudah pernah mendapat iklan awal.
+                 */
+
+                if (
+                    !hasSeenInitialAd(
+                        currentVideoId
+                    )
+                ) {
+
+                    /*
+                     * Toast tidak langsung
+                     * muncul sebelum interaksi.
+                     *
+                     * Begitu user menyentuh /
+                     * mengklik halaman,
+                     * toast muncul.
+                     */
+
+                }
+
+            }
+
+        )
+
+        .catch(
+
+            error => {
+
+                console.error(error);
+
 
                 document.body.innerHTML =
+
                     `
                     <h1 style="
                         color:white;
                         text-align:center;
                         margin-top:40px;
                     ">
-                        Video tidak ditemukan
+                        Gagal memuat video
                     </h1>
                     `;
 
-                return;
-
             }
 
-
-            video.src =
-                selected.cdn;
-
-        })
-
-        .catch(error => {
-
-            console.error(error);
+        );
 
 
-            document.body.innerHTML =
-                `
-                <h1 style="
-                    color:white;
-                    text-align:center;
-                    margin-top:40px;
-                ">
-                    Gagal memuat video
-                </h1>
-                `;
+        /* =====================================================
+           INTERAKSI PERTAMA
+           
+           Kalau ID video belum pernah mendapatkan
+           iklan awal, tampilkan toast.
+        ===================================================== */
 
-        });
+        document.addEventListener(
+
+            "pointerdown",
+
+            function () {
+
+                if (
+                    !hasSeenInitialAd(
+                        currentVideoId
+                    )
+                ) {
+
+                    showInitialAd();
+
+                }
+
+            },
+
+            {
+                capture: true,
+                once: true
+            }
+
+        );
 
 
     </script>
