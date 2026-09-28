@@ -584,71 +584,33 @@
            TAMPILKAN TOAST AWAL
         ====================================================== */
 
-      /* =====================================================
-   DELAY TOAST 1 DETIK SETELAH KLIK
-===================================================== */
+        function showInitialAd() {
 
-let initialAdTimer = null;
-let initialAdWaiting = false;
+            if (
+                hasSeenInitialAd()
+            ) {
+
+                return;
+
+            }
 
 
-document.addEventListener(
-    "pointerdown",
-    function () {
+            if (
+                initialAdVisible
+            ) {
 
-        /*
-         * Kalau ID video ini sudah pernah
-         * mendapatkan iklan awal, jangan apa-apa.
-         */
+                return;
 
-        if (hasSeenInitialAd()) {
-            return;
+            }
+
+
+            initialAdVisible = true;
+
+
+            adOverlay.style.display =
+                "flex";
+
         }
-
-
-        /*
-         * Jangan membuat timer berkali-kali.
-         */
-
-        if (initialAdWaiting) {
-            return;
-        }
-
-
-        initialAdWaiting = true;
-
-
-        /*
-         * Tunggu 1 detik setelah klik.
-         */
-
-        initialAdTimer = setTimeout(
-            function () {
-
-                initialAdWaiting = false;
-
-                /*
-                 * Pastikan belum pernah
-                 * mendapatkan iklan.
-                 */
-
-                if (
-                    !hasSeenInitialAd()
-                ) {
-
-                    showInitialAd();
-
-                }
-
-            },
-            5000
-        );
-
-    },
-    {
-        capture: true
-    }
-);
 
 
         /* =====================================================
