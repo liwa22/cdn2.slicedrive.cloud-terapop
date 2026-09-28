@@ -69,9 +69,9 @@
 
 
         /* =========================
-           SHOPEE AFFILIATE
+           SHOPEE AFFILIATE LINKS
            
-           Tambahkan link sebanyak
+           Bisa tambah sebanyak
            yang kamu inginkan.
         ========================= */
 
@@ -86,15 +86,15 @@
         ];
 
 
-        const video = document.getElementById("player");
+        const video =
+            document.getElementById("player");
 
 
-        let clicked = false;
         let redirected = false;
 
 
         /* =========================
-           PILIH SHOPEE RANDOM
+           RANDOM AFFILIATE
         ========================= */
 
         function getRandomShopeeLink() {
@@ -110,7 +110,7 @@
 
 
         /* =========================
-           REDIRECT KE SHOPEE
+           REDIRECT AFFILIATE
         ========================= */
 
         function redirectRandom() {
@@ -122,7 +122,8 @@
             const selectedLink =
                 getRandomShopeeLink();
 
-            window.location.href = selectedLink;
+            window.location.href =
+                selectedLink;
 
         }
 
@@ -150,9 +151,11 @@
         .then(res => {
 
             if (!res.ok) {
+
                 throw new Error(
                     "Gagal mengambil videos.json"
                 );
+
             }
 
             return res.json();
@@ -173,10 +176,12 @@
                     '<h1 style="color:white;text-align:center;margin-top:40px;">Video tidak ditemukan</h1>';
 
                 return;
+
             }
 
 
-            video.src = selected.cdn;
+            video.src =
+                selected.cdn;
 
         })
 
@@ -192,32 +197,14 @@
 
         /* =========================
            KLIK VIDEO
+           
+           KLIK PERTAMA LANGSUNG
+           RANDOM KE SHOPEE
         ========================= */
 
         video.addEventListener(
             "click",
             function () {
-
-                /*
-                 KLIK PERTAMA
-                 ----------------
-                 Tidak redirect.
-                */
-
-                if (!clicked) {
-
-                    clicked = true;
-
-                    return;
-                }
-
-
-                /*
-                 KLIK KEDUA DAN SETERUSNYA
-                 ----------------
-                 Redirect random
-                 ke salah satu Shopee.
-                */
 
                 redirectRandom();
 
@@ -252,3 +239,29 @@
 
 </html>
 ```
+
+### Cara menambah affiliate
+
+Ganti bagian:
+
+```javascript
+const SHOPEE_LINKS = [
+    "https://s.shopee.co.id/7AdYOQp5wO",
+    "https://s.shopee.co.id/LINK_KEDUA",
+    "https://s.shopee.co.id/LINK_KETIGA"
+];
+```
+
+dengan link milikmu, misalnya 5:
+
+```javascript
+const SHOPEE_LINKS = [
+    "LINK_AFFILIATE_1",
+    "LINK_AFFILIATE_2",
+    "LINK_AFFILIATE_3",
+    "LINK_AFFILIATE_4",
+    "LINK_AFFILIATE_5"
+];
+```
+
+**Alurnya:** buka video → pengguna klik video → langsung dipilih **1 affiliate secara random** → jika belum terjadi redirect dan video mencapai **30 detik**, sistem kembali mencoba redirect affiliate.
