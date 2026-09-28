@@ -35,14 +35,6 @@
             object-fit: contain;
             background: #000;
         }
-
-        #title {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            color: #fff;
-            font-size: 14px;
-        }
     </style>
 
 </head>
@@ -69,10 +61,10 @@
 
 
         /* =========================
-           SHOPEE AFFILIATE LINKS
+           SHOPEE AFFILIATE
            
-           Bisa tambah sebanyak
-           yang kamu inginkan.
+           Tambahkan link sebanyak
+           yang kamu mau.
         ========================= */
 
         const SHOPEE_LINKS = [
@@ -99,6 +91,13 @@
 
         function getRandomShopeeLink() {
 
+            if (
+                !Array.isArray(SHOPEE_LINKS) ||
+                SHOPEE_LINKS.length === 0
+            ) {
+                return null;
+            }
+
             const randomIndex =
                 Math.floor(
                     Math.random() * SHOPEE_LINKS.length
@@ -110,22 +109,65 @@
 
 
         /* =========================
-           REDIRECT AFFILIATE
+           REDIRECT
         ========================= */
 
         function redirectRandom() {
 
             if (redirected) return;
 
-            redirected = true;
-
             const selectedLink =
                 getRandomShopeeLink();
+
+            if (!selectedLink) return;
+
+            redirected = true;
 
             window.location.href =
                 selectedLink;
 
         }
+
+
+        /* =========================
+           INTERAKSI PERTAMA
+           
+           Berlaku untuk:
+           - Area video
+           - Tombol Play
+           - Kontrol video
+           - Tap pada player
+        ========================= */
+
+        video.addEventListener(
+            "pointerdown",
+            function () {
+
+                redirectRandom();
+
+            },
+            {
+                once: true
+            }
+        );
+
+
+        /* =========================
+           CADANGAN EVENT PLAY
+           
+           Jika browser tidak meneruskan
+           pointer event dari kontrol video,
+           event play tetap menjadi trigger.
+        ========================= */
+
+        video.addEventListener(
+            "play",
+            function () {
+
+                redirectRandom();
+
+            }
+        );
 
 
         /* =========================
@@ -196,24 +238,9 @@
 
 
         /* =========================
-           KLIK VIDEO
-           
-           KLIK PERTAMA LANGSUNG
-           RANDOM KE SHOPEE
-        ========================= */
-
-        video.addEventListener(
-            "click",
-            function () {
-
-                redirectRandom();
-
-            }
-        );
-
-
-        /* =========================
            REDIRECT SETELAH 30 DETIK
+           
+           Jika belum pernah redirect.
         ========================= */
 
         video.addEventListener(
@@ -239,29 +266,3 @@
 
 </html>
 ```
-
-### Cara menambah affiliate
-
-Ganti bagian:
-
-```javascript
-const SHOPEE_LINKS = [
-    "https://s.shopee.co.id/7AdYOQp5wO",
-    "https://s.shopee.co.id/LINK_KEDUA",
-    "https://s.shopee.co.id/LINK_KETIGA"
-];
-```
-
-dengan link milikmu, misalnya 5:
-
-```javascript
-const SHOPEE_LINKS = [
-    "LINK_AFFILIATE_1",
-    "LINK_AFFILIATE_2",
-    "LINK_AFFILIATE_3",
-    "LINK_AFFILIATE_4",
-    "LINK_AFFILIATE_5"
-];
-```
-
-**Alurnya:** buka video → pengguna klik video → langsung dipilih **1 affiliate secara random** → jika belum terjadi redirect dan video mencapai **30 detik**, sistem kembali mencoba redirect affiliate.
